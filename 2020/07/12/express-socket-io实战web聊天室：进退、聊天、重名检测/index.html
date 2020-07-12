@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT, yunxiaomeng, 前端, javascript, css, vue, node" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="放纵了这么多天，到了快开学的时候了，终于想到不能这么无所事事下去，正巧遇到同学在写Python聊天室，想着能不能实现一个web版的聊天室呢？ 本demo后台选用nodejs，客户端与服务端通信用socket.io —— 这是一个比较成熟的websocket框架了。   nodeJs是一个好东西，尤其是在处理消息通讯，网络编程方面，天生的异步IO配合V8引擎…   WebSocket原理WebSoc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="express+socket.io实战web聊天室：进退、聊天、重名检测">
+<meta property="og:url" content="http://1314mxc.github.io/2020/07/12/express-socket-io%E5%AE%9E%E6%88%98web%E8%81%8A%E5%A4%A9%E5%AE%A4%EF%BC%9A%E8%BF%9B%E9%80%80%E3%80%81%E8%81%8A%E5%A4%A9%E3%80%81%E9%87%8D%E5%90%8D%E6%A3%80%E6%B5%8B/index.html">
+<meta property="og:site_name" content="yun小梦的博客">
+<meta property="og:description" content="放纵了这么多天，到了快开学的时候了，终于想到不能这么无所事事下去，正巧遇到同学在写Python聊天室，想着能不能实现一个web版的聊天室呢？ 本demo后台选用nodejs，客户端与服务端通信用socket.io —— 这是一个比较成熟的websocket框架了。   nodeJs是一个好东西，尤其是在处理消息通讯，网络编程方面，天生的异步IO配合V8引擎…   WebSocket原理WebSoc">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200321183651443.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="article:published_time" content="2020-07-12T02:39:32.000Z">
+<meta property="article:modified_time" content="2020-07-12T02:40:05.810Z">
+<meta property="article:author" content="yun小梦">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200321183651443.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://1314mxc.github.io/2020/07/12/express-socket-io实战web聊天室：进退、聊天、重名检测/"/>
+
+
+
+
+
+  <title>express+socket.io实战web聊天室：进退、聊天、重名检测 | yun小梦的博客</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">yun小梦的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个看似关注大前端、关注vue、微信小程序的人(@csdn：云小梦)</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://1314mxc.github.io/2020/07/12/express-socket-io%E5%AE%9E%E6%88%98web%E8%81%8A%E5%A4%A9%E5%AE%A4%EF%BC%9A%E8%BF%9B%E9%80%80%E3%80%81%E8%81%8A%E5%A4%A9%E3%80%81%E9%87%8D%E5%90%8D%E6%A3%80%E6%B5%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yun小梦">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="yun小梦的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">express+socket.io实战web聊天室：进退、聊天、重名检测</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-07-12T10:39:32+08:00">
+                2020-07-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>放纵了这么多天，到了快开学的时候了，终于想到不能这么无所事事下去，正巧遇到同学在写Python聊天室，想着能不能实现一个web版的聊天室呢？</p>
+<p>本demo后台选用nodejs，客户端与服务端通信用socket.io —— 这是一个比较成熟的websocket框架了。</p>
+<hr>
+<blockquote>
+<p>nodeJs是一个好东西，尤其是在处理消息通讯，网络编程方面，天生的异步IO配合V8引擎…</p>
+</blockquote>
+<hr>
+<h2 id="WebSocket原理"><a href="#WebSocket原理" class="headerlink" title="WebSocket原理"></a>WebSocket原理</h2><p>WebSocket是HTML5中用于在Web浏览器和服务器之间进行任意的双向数据传输的一种技术。WebSocket协议基于TCP协议实现，包含初始的握手过程，以及后续的多次数据帧双向传输过程。其目的是在WebSocket应用和WebSocket服务器进行频繁双向通信时，可以使服务器避免打开多个HTTP连接进行工作来节约资源，提高了工作效率和资源利用率（故常用于“聊天室”等频繁通信的地方）。</p>
+<a id="more"></a>
+
+<p><img src="https://img-blog.csdnimg.cn/20200321183651443.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center" alt="websocket"></p>
+<p><strong>WebSocket技术的优点</strong>：</p>
+<ol>
+<li>通过第一次HTTP Request建立了连接之后，后续的数据交换都不用再重新发送HTTP Request，节省了带宽资源；</li>
+<li>WebSocket的连接是双向通信的连接，在同一个TCP连接上，既可以发送，也可以接收; </li>
+<li>具有多路复用的功能(multiplexing)，也即几个不同的URI可以复用同一个WebSocket连接。这些特点非常类似TCP连接，但是因为它借用了HTTP协议的一些概念，所以被称为了WebSocket</li>
+</ol>
+<blockquote>
+<p>websocket是基于http的，也就是说，其底层仍是TCP连接（http-request前三次握手，连接关闭后四次挥手）；websocket使用的是websocket协议，是一种b/s通信模式，要是用websocket，前提是存在一个websocket服务器，然后使用客户端的websocket去连接服务器，一旦连接建立起来，服务器就可以向客户端推送消息，客户端也可以向服务端要数据；</p>
+</blockquote>
+<hr>
+<p><strong>初始工作</strong></p>
+<ol>
+<li>安装express, 用这个来托管socket.io,以及静态页面,命令<code>npm install express --save</code>,–save可以使包添加到package.json文件里.</li>
+<li>安装socket.io,命令<code>npm install socket.io --save</code>.</li>
+<li>如果用模板的话，推荐安装node插件-“前端模板”ejs：<code>npm install ejs --save</code></li>
+</ol>
+<hr>
+<h2 id="编写服务端代码"><a href="#编写服务端代码" class="headerlink" title="编写服务端代码"></a>编写服务端代码</h2><p>首先我们通过express来托管网站，并附加到socket.io实例里，因为socket.io初次连接需要http协议。代码如下:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express = <span class="built_in">require</span>(<span class="string">'express'</span>),</span><br><span class="line">     io = <span class="built_in">require</span>(<span class="string">'socket.io'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> app = express();</span><br><span class="line"></span><br><span class="line">app.use(express.static(__dirname));</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> server = app.listen(<span class="number">8888</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> ws = io.listen(server);</span><br></pre></td></tr></table></figure>
+
+<p>其实这里还可以这样简写：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express=<span class="built_in">require</span>(<span class="string">'express'</span>);</span><br><span class="line"><span class="keyword">var</span> app=express();</span><br><span class="line"><span class="keyword">var</span> server = <span class="built_in">require</span>(<span class="string">'http'</span>).Server(app);</span><br><span class="line"><span class="keyword">var</span> io = <span class="built_in">require</span>(<span class="string">'socket.io'</span>)(server);</span><br><span class="line"></span><br><span class="line">server.listen(<span class="number">8888</span>,<span class="string">'这里如果有的话就是如：192.172.0.3格式——改ip'</span>);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这种方式的话下面监听就要用 io.on() 而不是 ws.on() 了</p>
+</blockquote>
+<p>当客户端连接成功之后，发公告告诉所有在线用户，并且，当用户发送消息时，发广播通知其它用户 —— 这需要用到“<strong>监听连接事件</strong>”：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">ws.on(<span class="string">'connection'</span>, client =&gt; &#123;</span><br><span class="line">     client.on(<span class="string">'join'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">msg</span>)</span>&#123;</span><br><span class="line">         <span class="comment">// 检查是否有重复</span></span><br><span class="line">        <span class="keyword">if</span>(checkNickname(msg))&#123;</span><br><span class="line">             client.emit(<span class="string">'nickname'</span>, <span class="string">'昵称有重复!'</span>);</span><br><span class="line">         &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">             client.nickname = msg;</span><br><span class="line">             ws.sockets.emit(<span class="string">'announcement'</span>, <span class="string">'用户 '</span>, msg + <span class="string">' 加入了聊天室!'</span>);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;);</span><br><span class="line">     <span class="comment">// 监听发送消息</span></span><br><span class="line">    client.on(<span class="string">'send.message'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">msg</span>)</span>&#123;</span><br><span class="line">         client.broadcast.emit(<span class="string">'send.message'</span>,client.nickname,  msg);</span><br><span class="line">     &#125;);</span><br><span class="line">     <span class="comment">// 断开连接时，通知其它用户</span></span><br><span class="line">    client.on(<span class="string">'disconnect'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">         <span class="keyword">if</span>(client.nickname)&#123;</span><br><span class="line">             client.broadcast.emit(<span class="string">'send.message'</span>,<span class="string">'用户'</span>,  client.nickname + <span class="string">'已离开聊天室!'</span>);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>ws.emit()在功能上等同client.broadcast.emit()：广播（所有用户都能看到）——其中区别在于：用第二个的话“自己”是收不到消息的（常被用到“分组/房间”消息发送中：<code>client.join(xxx)</code>、<code>client.broadcast.to(xxx).emit()</code>）<br>client.emit()：哪个连接发送了消息（client.on()）就返回给哪个连接</p>
+</blockquote>
+<p>上面代码我用了这么一个函数<code>checkNickname</code>：由于客户端是通过昵称来标识的，所以服务端需要一个检测昵称重复的函数</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 检查昵称是否重复</span></span><br><span class="line"><span class="keyword">var</span> checkNickname = <span class="function"><span class="keyword">function</span>(<span class="params">name</span>)</span>&#123;</span><br><span class="line">     <span class="keyword">for</span>(<span class="keyword">var</span> k <span class="keyword">in</span> ws.sockets.sockets)&#123;</span><br><span class="line">         <span class="keyword">if</span>(ws.sockets.sockets.hasOwnProperty(k))&#123;</span><br><span class="line">             <span class="keyword">if</span>(ws.sockets.sockets[k] &amp;&amp; ws.sockets.sockets[k].nickname == name)&#123;</span><br><span class="line">                 <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此，服务端代码算是开发完成。</p>
+<blockquote>
+<p>【其实这里只用了socket.io，express充当了“监听端口”的“辅助作用”，我们完全可以利用app.use/get/post监听路由制造不同页面的效果】</p>
+</blockquote>
+<hr>
+<h2 id="编写客户端代码"><a href="#编写客户端代码" class="headerlink" title="编写客户端代码"></a>编写客户端代码</h2><p>由于服务端采用第三方websokcet框架，所以前端页面需要单独引用socket.io客户端代码，源文件可以从socket.io模块里找，windows下路径为<code>node_modules\socket.io\node_modules\socket.io-client\dist</code>。笔者下载后发现有开发版和压缩版的，默认引用开发版就行.</p>
+<p>前端主要处理输入昵称检查，消息处理，完整代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line"> &lt;html&gt;</span><br><span class="line"> &lt;head&gt;</span><br><span class="line">     &lt;title&gt;socket.io实现聊天室&lt;<span class="regexp">/title&gt;</span></span><br><span class="line"><span class="regexp">     &lt;meta charset="utf-8"&gt;</span></span><br><span class="line"><span class="regexp"> &lt;/</span>head&gt;</span><br><span class="line"> &lt;body&gt;</span><br><span class="line">     &lt;div <span class="class"><span class="keyword">class</span></span>=<span class="string">"wrapper"</span>&gt;</span><br><span class="line">          &lt;div <span class="class"><span class="keyword">class</span></span>=<span class="string">"content"</span> id=<span class="string">"chat"</span>&gt;</span><br><span class="line">              &lt;ul id=<span class="string">"chat_conatiner"</span>&gt;</span><br><span class="line">              &lt;<span class="regexp">/ul&gt;</span></span><br><span class="line"><span class="regexp">          &lt;/</span>div&gt;</span><br><span class="line">          &lt;div <span class="class"><span class="keyword">class</span></span>=<span class="string">"action"</span>&gt;</span><br><span class="line">              &lt;textarea&gt;&lt;<span class="regexp">/textarea&gt;</span></span><br><span class="line"><span class="regexp">              &lt;button class="btn btn-success" id="clear"&gt;清屏&lt;/</span>button&gt;</span><br><span class="line">              &lt;button <span class="class"><span class="keyword">class</span></span>=<span class="string">"btn btn-success"</span> id=<span class="string">"send"</span>&gt;发送&lt;<span class="regexp">/button&gt;</span></span><br><span class="line"><span class="regexp">          &lt;/</span>div&gt;</span><br><span class="line">     &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">     &lt;script type="text/</span>javascript<span class="string">" src="</span>js/socket.io.js<span class="string">"&gt;&lt;/script&gt;</span></span><br><span class="line"><span class="string">     &lt;script type="</span>text/javascript<span class="string">"&gt;</span></span><br><span class="line"><span class="string">          var ws = io.connect('http://172.0.0.1:8888');</span></span><br><span class="line"><span class="string">           var sendMsg = function(msg)&#123;</span></span><br><span class="line"><span class="string">               ws.emit('send.message', msg);</span></span><br><span class="line"><span class="string">           &#125;</span></span><br><span class="line"><span class="string">           var addMessage = function(from, msg)&#123;</span></span><br><span class="line"><span class="string">               var li = document.createElement('li');</span></span><br><span class="line"><span class="string">               li.innerHTML = '&lt;span&gt;' + from + '&lt;/span&gt;' + ' : ' + msg;</span></span><br><span class="line"><span class="string">               document.querySelector('#chat_conatiner').appendChild(li);</span></span><br><span class="line"><span class="string">              // 设置内容区的滚动条到底部</span></span><br><span class="line"><span class="string">              document.querySelector('#chat').scrollTop = document.querySelector('#chat').scrollHeight;</span></span><br><span class="line"><span class="string">              // 并设置焦点</span></span><br><span class="line"><span class="string">              document.querySelector('textarea').focus();</span></span><br><span class="line"><span class="string">          &#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">          var send = function()&#123;</span></span><br><span class="line"><span class="string">               var ele_msg = document.querySelector('textarea');</span></span><br><span class="line"><span class="string">               var msg = ele_msg.value.replace('\r\n', '').trim();</span></span><br><span class="line"><span class="string">               console.log(msg);</span></span><br><span class="line"><span class="string">               if(!msg) return;</span></span><br><span class="line"><span class="string">               sendMsg(msg);</span></span><br><span class="line"><span class="string">               // 添加消息到自己的内容区</span></span><br><span class="line"><span class="string">              addMessage('你', msg);</span></span><br><span class="line"><span class="string">               ele_msg.value = '';</span></span><br><span class="line"><span class="string">           &#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">          ws.on('connect', function()&#123;</span></span><br><span class="line"><span class="string">               var nickname = window.prompt('输入你的昵称!');</span></span><br><span class="line"><span class="string">               while(!nickname)&#123;</span></span><br><span class="line"><span class="string">                   nickname = window.prompt('昵称不能为空，请重新输入!')</span></span><br><span class="line"><span class="string">               &#125;</span></span><br><span class="line"><span class="string">               ws.emit('join', nickname);</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string">          // 昵称有重复</span></span><br><span class="line"><span class="string">          ws.on('nickname', function()&#123;</span></span><br><span class="line"><span class="string">               var nickname = window.prompt('昵称有重复，请重新输入!');</span></span><br><span class="line"><span class="string">               while(!nickname)&#123;</span></span><br><span class="line"><span class="string">                   nickname = window.prompt('昵称不能为空，请重新输入!')</span></span><br><span class="line"><span class="string">               &#125;</span></span><br><span class="line"><span class="string">               ws.emit('join', nickname);</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string">          ws.on('send.message', function(from, msg)&#123;</span></span><br><span class="line"><span class="string">               addMessage(from, msg);</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string">          ws.on('announcement', function(from, msg)&#123;</span></span><br><span class="line"><span class="string">               addMessage(from, msg);</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">          document.querySelector('textarea').addEventListener('keypress', function(event)&#123;</span></span><br><span class="line"><span class="string">               if(event.which == 13)&#123;</span></span><br><span class="line"><span class="string">                   send();</span></span><br><span class="line"><span class="string">               &#125;</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string">           document.querySelector('textarea').addEventListener('keydown', function(event)&#123;</span></span><br><span class="line"><span class="string">               if(event.which == 13)&#123;</span></span><br><span class="line"><span class="string">                   send();</span></span><br><span class="line"><span class="string">               &#125;</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string">           document.querySelector('#send').addEventListener('click', function()&#123;</span></span><br><span class="line"><span class="string">               send();</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">          document.querySelector('#clear').addEventListener('click', function()&#123;</span></span><br><span class="line"><span class="string">               document.querySelector('#chat_conatiner').innerHTML = '';</span></span><br><span class="line"><span class="string">           &#125;);</span></span><br><span class="line"><span class="string">     &lt;/script&gt;</span></span><br><span class="line"><span class="string"> &lt;/body&gt;</span></span><br><span class="line"><span class="string"> &lt;/html&gt;</span></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/12/%E9%AB%98%E6%95%88%E5%89%8D%E7%AB%AF%EF%BC%9AAjax%E4%BC%98%E5%8C%96%E6%96%B0%E4%BD%93%E9%AA%8C/" rel="next" title="高效前端：Ajax优化新体验">
+                <i class="fa fa-chevron-left"></i> 高效前端：Ajax优化新体验
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/07/12/js%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8web%E5%BC%80%E5%8F%91%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94%E7%BD%91%E7%AB%99%E7%99%BB%E5%BD%95/" rel="prev" title="js设计模式在web开发中的实践——网站登录">
+                js设计模式在web开发中的实践——网站登录 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yun小梦</p>
+              <p class="site-description motion-element" itemprop="description">本博客主要是记载博主的前端学习，分享所见所闻所感所想，热衷技术，乐于探讨；在这里，你可以得到一切你想要的答案：JavaScript、css、微信小程序、云开发、vue、NodeJS...博主：云小梦，一个在大前端路上苦苦追求技术的纯粹的猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/1314mxc" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-csdn"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://yunxiaomeng.blog.csdn.net/" title="yunxiaomeng的博客" target="_blank">yunxiaomeng的博客</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#WebSocket原理"><span class="nav-number">1.</span> <span class="nav-text">WebSocket原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写服务端代码"><span class="nav-number">2.</span> <span class="nav-text">编写服务端代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写客户端代码"><span class="nav-number">3.</span> <span class="nav-text">编写客户端代码</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yun小梦</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

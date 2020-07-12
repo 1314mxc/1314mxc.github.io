@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT, yunxiaomeng, 前端, javascript, css, vue, node" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前面，笔者写了两篇关于web安全的文章，里面对两种安全策略进行分析的同时还简介了其余的安全策略：Web安全：细说前端XSS攻击与防范Web安全：细说后端密码安全防范  这不，最近笔者就碰上了其中两个新的web安全策略：同源策略 和 window.opener安全问题 —— 这两个不算是新问题，但是也不是经常用到的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="web安全终弹：两个““特别的”安全策略">
+<meta property="og:url" content="http://1314mxc.github.io/2020/07/12/web%E5%AE%89%E5%85%A8%E7%BB%88%E5%BC%B9%EF%BC%9A%E4%B8%A4%E4%B8%AA%E2%80%9C%E2%80%9C%E7%89%B9%E5%88%AB%E7%9A%84%E2%80%9D%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5/index.html">
+<meta property="og:site_name" content="yun小梦的博客">
+<meta property="og:description" content="前面，笔者写了两篇关于web安全的文章，里面对两种安全策略进行分析的同时还简介了其余的安全策略：Web安全：细说前端XSS攻击与防范Web安全：细说后端密码安全防范  这不，最近笔者就碰上了其中两个新的web安全策略：同源策略 和 window.opener安全问题 —— 这两个不算是新问题，但是也不是经常用到的。">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020060816530245.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200608170854594.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020060818002530.gif">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200608182810989.gif">
+<meta property="article:published_time" content="2020-07-12T03:13:18.000Z">
+<meta property="article:modified_time" content="2020-07-12T03:13:49.005Z">
+<meta property="article:author" content="yun小梦">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/2020060816530245.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://1314mxc.github.io/2020/07/12/web安全终弹：两个““特别的”安全策略/"/>
+
+
+
+
+
+  <title>web安全终弹：两个““特别的”安全策略 | yun小梦的博客</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">yun小梦的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个看似关注大前端、关注vue、微信小程序的人(@csdn：云小梦)</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://1314mxc.github.io/2020/07/12/web%E5%AE%89%E5%85%A8%E7%BB%88%E5%BC%B9%EF%BC%9A%E4%B8%A4%E4%B8%AA%E2%80%9C%E2%80%9C%E7%89%B9%E5%88%AB%E7%9A%84%E2%80%9D%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yun小梦">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="yun小梦的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">web安全终弹：两个““特别的”安全策略</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-07-12T11:13:18+08:00">
+                2020-07-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>前面，笔者写了两篇关于web安全的文章，里面对两种安全策略进行分析的同时还简介了其余的安全策略：<br><a href="https://blog.csdn.net/qq_43624878/article/details/105021832" target="_blank" rel="noopener">Web安全：细说前端XSS攻击与防范</a><br><a href="https://blog.csdn.net/qq_43624878/article/details/105474323" target="_blank" rel="noopener">Web安全：细说后端密码安全防范</a></p>
+</blockquote>
+<p>这不，最近笔者就碰上了其中两个新的web安全策略：<strong>同源策略</strong> 和 <strong>window.opener安全问题</strong> —— 这两个不算是新问题，但是也不是经常用到的。</p>
+<p><img src="https://img-blog.csdnimg.cn/2020060816530245.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center" alt="fg"></p>
+<a id="more"></a>
+
+<h2 id="同源策略"><a href="#同源策略" class="headerlink" title="同源策略"></a>同源策略</h2><p><strong>同源：</strong> 如果两个URL的协议、域名和端口都相同，我们就称这两个URL为同源。</p>
+<p>关于同源问题，经常能碰上一些【意想不到】的“惊喜”：</p>
+<ul>
+<li>同源策略限制了来自不同源的JavaScript脚本对当前DOM对象的读和写的操作</li>
+<li>同源策略限制了不同源站点读取当前站点的Cookie、IndexDB、LocalStorage等（本地）数据</li>
+<li>同源策略限制了通过XMLHttpRequest等方式将站点的数据发送给不同源的站点</li>
+</ul>
+<p>当然，也引出了各种<strong>解决同源策略的方法</strong>：<br>|方法| 解读/说明 |<br>|–|–|<br>| 跨文档消息传输 | 通过<strong>postMessage</strong>消息队列机制和JavaScript接口和不同源的DOM进行通信（<a href="https://blog.csdn.net/qq_43624878/article/details/103269489#postMessage_68" target="_blank" rel="noopener">前端常用的几种跨域通信方式实践：jsonp&amp;cors&amp;postMessage</a>） |<br>| 跨域资源共享（<strong>CORS</strong>） | 跨域资源<strong>在服务端设置</strong>允许跨域，就可以进行跨域访问控制，从而使得跨域数据得以安全传输 |<br>| 内容安全策略（<strong>CSP</strong>） | 主要以白名单方式配置可信任内容来源，可<strong>在前端配置（meta标签&gt;http-equiv&amp;content属性）</strong>；在网页中，能够使白名单中的内容正常执行（包含JS、CSS、Image等），而非白名单的内容无法执行（这也是XSS的解决方案之一） |</p>
+<p><img src="https://img-blog.csdnimg.cn/20200608170854594.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzNjI0ODc4,size_16,color_FFFFFF,t_70#pic_center" alt="fg"></p>
+<h2 id="window-opener安全问题"><a href="#window-opener安全问题" class="headerlink" title="window.opener安全问题"></a>window.opener安全问题</h2><p>window.opener表示打开当前窗体页面的父窗体是谁。<br>比如：在A页面中，我们通过一个带有<code>target=&quot;_blank&quot;</code> 的a标签打开了一个新的页面B。那么在B页面里，window.opener的值为A页面的window对象！</p>
+<p>一般来说，打开同源的页面的话，不会有什么问题。但是对于跨域的外部链接来说，则存在被钓鱼的风险：比如你正在浏览XX网站，不小心点了某个按钮从而从当前页面打开了一个外部链接；那么在被打开的外部页面可用通过<code>window.opener.location</code> 访问和改写来源站点的地址。</p>
+<p>利用这一点，将来源站点改写到钓鱼站点页面上，例如跳转到伪造的高仿XX页面，当你再回到原先的页面（表面上看是从这个新打开的页面“返回”原页面）时，你并没有发觉原先的页面已经被改动了 ——而这时候你的账号已经被弄走了。</p>
+<p>这里笔者给大家拿笔者的博客页面简单展示一下其危害（下图第一张为展示opener，第二张为更改父href）：<br><img src="https://img-blog.csdnimg.cn/2020060818002530.gif" alt="ys"><br><img src="https://img-blog.csdnimg.cn/20200608182810989.gif" alt="ys2"></p>
+<p>当然，任何安全漏洞都有其<strong>预防策略</strong>：</p>
+<ol>
+<li><strong>设置rel属性</strong>：<code>&lt;a href=&quot;xxx&quot; rel=&quot;noopener noreferrer&quot;&gt;某外链&lt;/a&gt;</code> rel=noopener设置了禁止新页面传递源页面的地址 —— 通过此属性打开的页面，其window.opener值为null</li>
+<li>既然也和同源有关，那就将外链替换为内部的跳转连接服务：跳转时先跳到内部地址，再由服务器redirect到外链</li>
+<li>通过JS的<code>window.open()</code>打开外链</li>
+</ol>
+<hr>
+<p>本文介绍的两个安全策略第一个就不说了，在好多安全策略中貌似都有其身影；至于第二个…</p>
+<p>它和“<strong>CSRF攻击</strong>”、“<strong>点击劫持攻击</strong>”似乎都很相似，其区别在于功能上：<br>CSRF攻击处理的是<strong>第三方网站盗用cookie</strong>从而在原网站“自动”发送评论；<br>点击劫持攻击处理的是<strong>hidden-iframe隐藏危险按钮</strong>诱使用户点击；<br>而本文所说window.opener则是处理的target外链安全</p>
+<p>希望能帮助到各位吧！</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/12/js%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8web%E5%BC%80%E5%8F%91%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94%E7%BD%91%E7%AB%99%E7%99%BB%E5%BD%95/" rel="next" title="js设计模式在web开发中的实践——网站登录">
+                <i class="fa fa-chevron-left"></i> js设计模式在web开发中的实践——网站登录
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yun小梦</p>
+              <p class="site-description motion-element" itemprop="description">本博客主要是记载博主的前端学习，分享所见所闻所感所想，热衷技术，乐于探讨；在这里，你可以得到一切你想要的答案：JavaScript、css、微信小程序、云开发、vue、NodeJS...博主：云小梦，一个在大前端路上苦苦追求技术的纯粹的猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/1314mxc" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-csdn"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://yunxiaomeng.blog.csdn.net/" title="yunxiaomeng的博客" target="_blank">yunxiaomeng的博客</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#同源策略"><span class="nav-number">1.</span> <span class="nav-text">同源策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#window-opener安全问题"><span class="nav-number">2.</span> <span class="nav-text">window.opener安全问题</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yun小梦</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

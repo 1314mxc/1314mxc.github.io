@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT, yunxiaomeng, 前端, javascript, css, vue, node" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="本文，笔者将以一个登录模块的开发流程，向各位说明穿插在其中的知识点 —— 【单例模式】和【发布-订阅模式】的使用。  OK，步入正题。 假如你是一个大型网站的前端开发人员，在经过激烈地讨论以后，决定让你负责登录模块的开发。先说，这个网站很大，所以有很多模块，比如：header头部、nav导航、消息列表、购物车…… 这些模块有一个共同的特点，就是必须先用ajax异步请求获取用户的登录信息 —— 这是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="js设计模式在web开发中的实践——网站登录">
+<meta property="og:url" content="http://1314mxc.github.io/2020/07/12/js%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8web%E5%BC%80%E5%8F%91%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94%E7%BD%91%E7%AB%99%E7%99%BB%E5%BD%95/index.html">
+<meta property="og:site_name" content="yun小梦的博客">
+<meta property="og:description" content="本文，笔者将以一个登录模块的开发流程，向各位说明穿插在其中的知识点 —— 【单例模式】和【发布-订阅模式】的使用。  OK，步入正题。 假如你是一个大型网站的前端开发人员，在经过激烈地讨论以后，决定让你负责登录模块的开发。先说，这个网站很大，所以有很多模块，比如：header头部、nav导航、消息列表、购物车…… 这些模块有一个共同的特点，就是必须先用ajax异步请求获取用户的登录信息 —— 这是">
+<meta property="article:published_time" content="2020-07-12T02:41:20.000Z">
+<meta property="article:modified_time" content="2020-07-12T02:42:38.002Z">
+<meta property="article:author" content="yun小梦">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://1314mxc.github.io/2020/07/12/js设计模式在web开发中的实践——网站登录/"/>
+
+
+
+
+
+  <title>js设计模式在web开发中的实践——网站登录 | yun小梦的博客</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">yun小梦的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个看似关注大前端、关注vue、微信小程序的人(@csdn：云小梦)</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://1314mxc.github.io/2020/07/12/js%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8web%E5%BC%80%E5%8F%91%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94%E7%BD%91%E7%AB%99%E7%99%BB%E5%BD%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yun小梦">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="yun小梦的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">js设计模式在web开发中的实践——网站登录</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-07-12T10:41:20+08:00">
+                2020-07-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文，笔者将以一个登录模块的开发流程，向各位说明穿插在其中的知识点 —— 【单例模式】和【发布-订阅模式】的使用。</p>
+<hr>
+<p>OK，步入正题。</p>
+<p>假如你是一个大型网站的前端开发人员，在经过激烈地讨论以后，决定让你负责登录模块的开发。<br>先说，这个网站很大，所以有很多模块，比如：header头部、nav导航、消息列表、购物车…… 这些模块有一个共同的特点，就是必须先用ajax异步请求获取用户的登录信息 —— 这是正常的，比如header中就要显示用户的名字和头像。<br>所以你很重要。</p>
+<a id="more"></a>
+
+<p>你着手做了。你的构思是：仿Web QQ那样。比如当点击了左边导航栏里的“请登录”的头像时，就会弹出一个遮罩层 + 一个登录浮窗。很明显这个浮窗在页面中总是唯一的。<br>第一种解决方案是在页面加载完成以后便创建好这个div浮窗，他一开始是处于隐藏状态的，当用户点击时，才开始显示 —— 我想，用js控制的display切换会有帮助。<br>但你很快就会发现一个问题：也许用户进入这个页面只是随便逛逛、看看天气、or打打游戏，根本不想进行登录操作。这时，这个“总是一开始就被创建好的登录浮窗”就有可能成为白白浪费一些DOM节点的“元凶”。<br>你很快又有了想法，决定<strong>让用户点击对应区域时再去加载</strong>。你可能会写类似如下代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&lt;body&gt;</span><br><span class="line">	&lt;button id=<span class="string">"loginBtn"</span>&gt;登录&lt;<span class="regexp">/button&gt;</span></span><br><span class="line"><span class="regexp">&lt;/</span>body&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">//js</span></span><br><span class="line">&lt;script&gt;</span><br><span class="line">	<span class="keyword">var</span> createLoginLayer=<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">		<span class="keyword">var</span> div=<span class="built_in">document</span>.createElement(<span class="string">'div'</span>);</span><br><span class="line">		div.innerHTML=<span class="string">"我是登录浮窗"</span>;</span><br><span class="line">		div.style.display=<span class="string">"none"</span>;</span><br><span class="line">		<span class="built_in">document</span>.body.appendChild(div);</span><br><span class="line">		<span class="keyword">return</span> div;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">document</span>.querySelector(<span class="string">'#loginBtn'</span>).onclick=<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">		<span class="keyword">var</span> loginBtn=createLoginLayer();</span><br><span class="line">		loginBtn.style.display=<span class="string">"block"</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&lt;<span class="regexp">/script&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>你突然发现，这样做虽然避免了每次页面打开时的DOM浪费，却产生看一个更大的问题：每次click时都会创建一个新的div！虽然我们可以在点击“关闭”时去销毁掉这个ElementNode，但这样频繁地创建和删除结点，在一个页面上，明显是不合理，也是不必要的。<br>于是你自然地想到了前几天看到的 <strong>惰性单例设计模式</strong> ，可以用一个变量去判断是否已创建过相同的div。 于是，上面代码中的js部分就变成了这样：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> createLoginLayer=(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	<span class="keyword">var</span> div;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">		<span class="keyword">if</span>(!div)&#123;</span><br><span class="line">			div=<span class="built_in">document</span>.createElement(<span class="string">'div'</span>);</span><br><span class="line">			div.innerHTML=<span class="string">"我是登录浮窗"</span>;</span><br><span class="line">			div.style.display=<span class="string">"none"</span>;</span><br><span class="line">			<span class="built_in">document</span>.body.appendChild(div);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> div;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;)();</span><br><span class="line"><span class="built_in">document</span>.querySelector(<span class="string">'#loginBtn'</span>).onclick=<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	<span class="keyword">var</span> loginBtn=createLoginLayer();</span><br><span class="line">	loginBtn.style.display=<span class="string">"block"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>OK，虽然它还有些许缺点（复用性差），但对于几个功能不冲突的页面来说还算“绰绰有余”，你心满意足地用了ajax/fetch/axios/vue-resource完成了登陆功能。</p>
+<p>但现在麻烦又来了。正如前面所说，你所做工作关联性极大，但你不知道除了header、nav、消息列表、购物车之外，将来还有哪些模块需要用到这些用户信息。但如果他们和用户信息之间产生了强耦合性，就比如你按如下方式写了功能代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">login.succ(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">	header.setAvatar(data.avatar);</span><br><span class="line">	nav.setAvatar(data.avatar);</span><br><span class="line">	message.refresh();   <span class="comment">//刷新消息列表</span></span><br><span class="line">	cart.refresh();   <span class="comment">//刷新购物车列表</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>现在虽然只有登录模块是你负责编写的，但你还要了解header里设置头像的方法叫setAvatar、购物车中刷新页面的方法叫refresh，，，这可不是个好消息 —— 这种耦合会使程序变得“僵硬”。</p>
+<p>试想某一天，这个项目里又增加了一个“收货地址”管理模块。它不是你负责完成的，此时你正在外地度过你一年仅几天的可怜假期，但同事却给你打了一个电话：“Hello，登录后还要麻烦刷新下地址列表！”   于是你不得不打开电脑，找到了不知道几个月前写的那段<code>login.succ</code>的代码片段，在此函数最后加了一句：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">address.refresh();   <span class="comment">//刷新地址列表</span></span><br></pre></td></tr></table></figure>
+
+<p>天哪！这是多可怜的一件事！</p>
+<p>这时你终于想起重构这些代码：你又那么“恰好”的想起了翻看过的 <strong>发布-订阅设计模式</strong> 。你欣喜若狂。</p>
+<blockquote>
+<p>我们就会越来越疲于应付一些突如其来的业务要求，正比如大量重复相同且没什么意义的代码。要么跳槽了事，要么必须学会重构。<br>使用发布—订阅模式重写之后，对用户信息感兴趣的业务模块将自行订阅登录成功的消息事件。   当登录成功时，登录模块只需要发布登录成功的消息，而业务方接受到消息之后，就会开始进行各自的业务处理，登录模块并不关心业务方究竟要做什么，也不想去了解它们的内部细节。</p>
+</blockquote>
+<p>改善过后代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$.ajax(<span class="string">'xxx?login'</span>,<span class="function"><span class="keyword">function</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">	login.trigger(<span class="string">'loginSucc'</span>,data);   <span class="comment">//发布登录成功的消息</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//各模块去监听消息</span></span><br><span class="line"><span class="keyword">var</span> header=(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	login.listen(<span class="string">'loginSucc'</span>,<span class="function"><span class="keyword">function</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">		header.setAvatar(data.avatar);</span><br><span class="line">	&#125;);</span><br><span class="line">	<span class="keyword">return</span>&#123;</span><br><span class="line">		setAvatar:<span class="function"><span class="keyword">function</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">			<span class="built_in">console</span>.log(<span class="string">'设置header头像'</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;)();</span><br><span class="line"><span class="comment">//...</span></span><br></pre></td></tr></table></figure>
+<p>假如有一天，项目中增加了一个刷新收货地址列表的行为，那么只要在“收货地址”模块里加上监听消息的方法，即可。而这些你就完全不必操心了：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> address=(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	login.listen(<span class="string">'loginSucc'</span>,<span class="function"><span class="keyword">function</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">		address.refresh(data);</span><br><span class="line">	&#125;);</span><br><span class="line">	<span class="keyword">return</span>&#123;</span><br><span class="line">		refresh:<span class="function"><span class="keyword">function</span>(<span class="params">avatar</span>)</span>&#123;</span><br><span class="line">			<span class="built_in">console</span>.log(<span class="string">'正在刷新...'</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure>
+<hr>
+<blockquote>
+<p>更多前端JavaScript优化方面请移步：<a href="https://yunxiaomeng.blog.csdn.net/article/details/102694623" target="_blank" rel="noopener">https://yunxiaomeng.blog.csdn.net/article/details/102694623</a></p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/12/express-socket-io%E5%AE%9E%E6%88%98web%E8%81%8A%E5%A4%A9%E5%AE%A4%EF%BC%9A%E8%BF%9B%E9%80%80%E3%80%81%E8%81%8A%E5%A4%A9%E3%80%81%E9%87%8D%E5%90%8D%E6%A3%80%E6%B5%8B/" rel="next" title="express+socket.io实战web聊天室：进退、聊天、重名检测">
+                <i class="fa fa-chevron-left"></i> express+socket.io实战web聊天室：进退、聊天、重名检测
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/07/12/web%E5%AE%89%E5%85%A8%E7%BB%88%E5%BC%B9%EF%BC%9A%E4%B8%A4%E4%B8%AA%E2%80%9C%E2%80%9C%E7%89%B9%E5%88%AB%E7%9A%84%E2%80%9D%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5/" rel="prev" title="web安全终弹：两个““特别的”安全策略">
+                web安全终弹：两个““特别的”安全策略 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yun小梦</p>
+              <p class="site-description motion-element" itemprop="description">本博客主要是记载博主的前端学习，分享所见所闻所感所想，热衷技术，乐于探讨；在这里，你可以得到一切你想要的答案：JavaScript、css、微信小程序、云开发、vue、NodeJS...博主：云小梦，一个在大前端路上苦苦追求技术的纯粹的猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/1314mxc" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-csdn"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://yunxiaomeng.blog.csdn.net/" title="yunxiaomeng的博客" target="_blank">yunxiaomeng的博客</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yun小梦</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
